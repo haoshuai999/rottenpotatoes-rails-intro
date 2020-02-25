@@ -17,9 +17,19 @@ class MoviesController < ApplicationController
     @ratings = params[:ratings]
     params[:sort_date] = 'original'
     params[:sort_title] = 'original'
+    @all_ratings.each do |rating|
+      params[rating] = true
+    end
 
     if @ratings
       @movies = Movie.with_ratings(@ratings.keys)
+      @all_ratings.each do |rating|
+        if @ratings.keys.include?(rating)
+          params[rating] = true
+        else
+          params[rating] = false
+        end
+      end
     end
 
     if @sort_by == 'title'
