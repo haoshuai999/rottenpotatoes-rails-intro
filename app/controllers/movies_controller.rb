@@ -17,12 +17,26 @@ class MoviesController < ApplicationController
     @ratings = params[:ratings]
     params[:sort_date] = 'original'
     params[:sort_title] = 'original'
-    @all_ratings.each do |rating|
-      params[rating] = true
+
+    if @ratings
+      session.delete(:rating)
+    elsif session[:ratings]
+      @ratings = session[:ratings]
+    else
+      @all_ratings.each do |rating|
+        params[rating] = true
+      end
+    end
+
+    if @sort_by
+      session.delete(:sort_by)
+    elsif session[:sort_by]
+      @sort_by = session[:sort_by]
     end
 
     if @ratings
-      @movies = Movie.with_ratings(@ratings.keys)
+      session[:ratings] = @ratings
+      @movies = @movies.with_ratings(@ratings.keys)
       @all_ratings.each do |rating|
         if @ratings.keys.include?(rating)
           params[rating] = true
@@ -33,11 +47,20 @@ class MoviesController < ApplicationController
     end
 
     if @sort_by == 'title'
-      @movies = Movie.all.order(@sort_by)
+      session[:sort_by] = @sort_by
+      @movies = @movies.order(@sort_by)
       params[:sort_title] = 'hilite'
     elsif @sort_by == 'release_date'
-      @movies = Movie.all.order(@sort_by)
+      session[:sort_by] = @sort_by
+      @movies = @movies.order(@sort_by)
       params[:sort_date] = 'hilite'
+    end
+
+    @sort_by = params[:sort_by]
+    @ratings = params[:ratings]
+    if session[:ratings] != @ratings || session[:sort_by] != @sort_by
+      flash.keep
+      redirect_to movies_path(:ratings => session[:ratings], :sort_by => session[:sort_by])
     end
   end
 
